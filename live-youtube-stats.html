@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Live Stats</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 1rem;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        header {
+            margin-bottom: 2rem;
+        }
+
+        .youtube-icon {
+            font-size: 80px;
+            color: #FF0000;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin: 0.5rem 0;
+            font-weight: 700;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .controls a {
+            padding: 1rem;
+            border-radius: 20px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background-color 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .display-container {
+            padding: 2rem;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        #display-title {
+            font-size: 1.5rem;
+            margin-top: 0;
+            margin-bottom: 1rem;
+        }
+
+        #live-count {
+            font-size: 4rem;
+            font-weight: 700;
+            color: #FF0000;
+            margin: 0;
+            word-wrap: break-word;
+        }
+
+        #theme-toggle-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1.5rem;
+            background: none;
+            border: 1px solid;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.3s, border-color 0.3s;
+        }
+
+        /* Light Theme */
+        .light-theme { background-color: #f9f9f9; color: #0f0f0f; }
+        .light-theme .controls a { background-color: #f0f0f0; border: 1px solid #ccc; color: #0f0f0f; }
+        .light-theme .controls a:hover, .light-theme .controls a.active { background-color: #e0e0e0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .light-theme .display-container { background-color: #ffffff; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .light-theme #display-title { color: #606060; }
+        .light-theme #theme-toggle-btn { color: #0f0f0f; border-color: #ccc; }
+
+        /* Dark Theme */
+        .dark-theme { background-color: #1a1a1a; color: #e0e0e0; }
+        .dark-theme .controls a { background-color: #2a2a2a; border: 1px solid #333; color: #e0e0e0; }
+        .dark-theme .controls a:hover, .dark-theme .controls a.active { background-color: #3a3a3a; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        .dark-theme .display-container { background-color: #2a2a2a; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+        .dark-theme #display-title { color: #b0b0b0; }
+        .dark-theme #theme-toggle-btn { color: #e0e0e0; border-color: #333; }
+    </style>
+</head>
+<body>
+    <button id="theme-toggle-btn" title="Toggle Theme"></button>
+    <header>
+        <i class="fab fa-youtube youtube-icon"></i>
+        <h1>YouTube</h1>
+    </header>
+
+    <main>
+        <nav class="controls">
+            <a id="sub-count-btn">YouTube Live Subscriber Count</a>
+            <a id="view-count-btn">YouTube Live View Count</a>
+            <a id="viewer-count-btn">YouTube Live Viewer Count</a>
+        </nav>
+
+        <div class="display-container">
+            <h2 id="display-title">Select a metric to view</h2>
+            <p id="live-count">0</p>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const subCountBtn = document.getElementById('sub-count-btn');
+            const viewCountBtn = document.getElementById('view-count-btn');
+            const viewerCountBtn = document.getElementById('viewer-count-btn');
+            const allBtns = [subCountBtn, viewCountBtn, viewerCountBtn];
+
+            const displayTitle = document.getElementById('display-title');
+            const liveCount = document.getElementById('live-count');
+
+            let currentCount = 0;
+            let countInterval;
+
+            // This function simulates a live update.
+            // In a real application, you would replace this with a call
+            // to the YouTube API every few seconds.
+            function startLiveUpdate(initialValue) {
+                if (countInterval) clearInterval(countInterval);
+
+                currentCount = initialValue;
+                liveCount.textContent = currentCount.toLocaleString();
+
+                // Simulate a random increase/decrease to make it feel "live"
+                countInterval = setInterval(() => {
+                    const change = Math.floor(Math.random() * 10) - 4; // Random change between -4 and 5
+                    currentCount += change;
+                    liveCount.textContent = currentCount.toLocaleString();
+                }, 1500); // Update every 1.5 seconds
+            }
+
+            function setActiveButton(activeBtn) {
+                allBtns.forEach(btn => btn.classList.remove('active'));
+                activeBtn.classList.add('active');
+            }
+
+            subCountBtn.addEventListener('click', () => {
+                setActiveButton(subCountBtn);
+                displayTitle.textContent = 'Live Subscriber Count';
+                startLiveUpdate(12345678); // Replace with real API data
+            });
+
+            viewCountBtn.addEventListener('click', () => {
+                setActiveButton(viewCountBtn);
+                displayTitle.textContent = 'Live View Count';
+                startLiveUpdate(987654321); // Replace with real API data
+            });
+
+            viewerCountBtn.addEventListener('click', () => {
+                setActiveButton(viewerCountBtn);
+                displayTitle.textContent = 'Live Viewer Count';
+                startLiveUpdate(54321); // Replace with real API data
+            });
+        });
+    </script>
+    <script src="theme.js" defer></script>
+</body>
+</html>

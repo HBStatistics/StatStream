@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compare Channels - StatStream</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .brand-logo { position: absolute; top: 1rem; left: 1.5rem; font-size: 1.25rem; font-weight: 500; }
+        .brand-logo a { text-decoration: none; }
+
+        .comparison-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            width: 100%;
+            max-width: 1000px;
+            margin-top: 4rem;
+        }
+
+        @media (min-width: 768px) {
+            .comparison-container { flex-direction: row; }
+        }
+
+        .channel-column {
+            flex: 1;
+            padding: 1.5rem;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            text-align: center;
+        }
+
+        .channel-info { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
+        .channel-info img { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; }
+        .channel-info h2 { font-size: 1.5rem; margin: 0; }
+
+        .count-display p { font-size: 1rem; margin-bottom: 0.5rem; }
+        .count-display div { font-size: 2.5rem; font-weight: 700; margin: 0; font-variant-numeric: tabular-nums; }
+        .sub-count { color: #FF0000; }
+
+        .chart-container { width: 100%; max-width: 1000px; height: 250px; margin-top: 2rem; }
+
+        #theme-toggle-btn { position: absolute; top: 1rem; right: 1.5rem; background: none; border: 1px solid; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; transition: color 0.3s, border-color 0.3s; }
+
+        /* Light Theme */
+        .light-theme { background-color: #f9f9f9; color: #0f0f0f; }
+        .light-theme .brand-logo a { color: #606060; }
+        .light-theme .channel-column { background-color: #ffffff; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .light-theme .channel-info img { border: 2px solid #eee; }
+        .light-theme .channel-info h2 { color: #333; }
+        .light-theme .count-display p { color: #606060; }
+        .light-theme .count-display div { color: #333; }
+        .light-theme .chart-container { background-color: rgba(0,0,0,0.02); border-radius: 12px; }
+        .light-theme #theme-toggle-btn { color: #0f0f0f; border-color: #ccc; }
+
+        /* Dark Theme */
+        .dark-theme { background-color: #1a1a1a; color: #e0e0e0; }
+        .dark-theme .brand-logo a { color: #b0b0b0; }
+        .dark-theme .channel-column { background-color: #2a2a2a; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+        .dark-theme .channel-info img { border: 2px solid #444; }
+        .dark-theme .channel-info h2 { color: #e0e0e0; }
+        .dark-theme .count-display p { color: #b0b0b0; }
+        .dark-theme .count-display div { color: #e0e0e0; }
+        .dark-theme .chart-container { background-color: rgba(255,255,255,0.05); border-radius: 12px; }
+        .dark-theme #theme-toggle-btn { color: #e0e0e0; border-color: #333; }
+    </style>
+</head>
+<body>
+    <div class="brand-logo">
+        <a href="index.html">StatStream</a>
+    </div>
+    <button id="theme-toggle-btn" title="Toggle Theme"></button>
+
+    <div class="comparison-container">
+        <!-- Channel 1 Column -->
+        <div class="channel-column">
+            <div class="channel-info">
+                <img id="channel-logo-1" src="" alt="Channel 1 Logo">
+                <h2 id="channel-name-1">Loading...</h2>
+            </div>
+            <div class="count-display">
+                <p>Subscribers</p>
+                <div id="subscriber-count-1" class="sub-count">0</div>
+            </div>
+            <div class="count-display">
+                <p>Total Views</p>
+                <div id="total-views-1">0</div>
+            </div>
+            <div class="count-display">
+                <p>Total Videos</p>
+                <div id="total-videos-1">0</div>
+            </div>
+        </div>
+        <!-- Channel 2 Column -->
+        <div class="channel-column">
+            <div class="channel-info">
+                <img id="channel-logo-2" src="" alt="Channel 2 Logo">
+                <h2 id="channel-name-2">Loading...</h2>
+            </div>
+            <div class="count-display">
+                <p>Subscribers</p>
+                <div id="subscriber-count-2" class="sub-count">0</div>
+            </div>
+            <div class="count-display">
+                <p>Total Views</p>
+                <div id="total-views-2">0</div>
+            </div>
+            <div class="count-display">
+                <p>Total Videos</p>
+                <div id="total-videos-2">0</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="comparison-chart"></canvas>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const channelId1 = urlParams.get('id1');
+            const channelId2 = urlParams.get('id2');
+
+            const API_KEY = 'AIzaSyBgELAGkvluwfu6CNKHNDTwq20_8lckcZU';
+            let comparisonChart;
+
+            const elements1 = {
+                logo: document.getElementById('channel-logo-1'),
+                name: document.getElementById('channel-name-1'),
+                subs: document.getElementById('subscriber-count-1'),
+                views: document.getElementById('total-views-1'),
+                videos: document.getElementById('total-videos-1'),
+            };
+
+            const elements2 = {
+                logo: document.getElementById('channel-logo-2'),
+                name: document.getElementById('channel-name-2'),
+                subs: document.getElementById('subscriber-count-2'),
+                views: document.getElementById('total-views-2'),
+                videos: document.getElementById('total-videos-2'),
+            };
+
+            let state1 = { subs: 0, views: 0, videos: 0 };
+            let state2 = { subs: 0, views: 0, videos: 0 };
+
+            const animateCount = (element, start, end, duration) => {
+                let startTime = null;
+                const step = (timestamp) => {
+                    if (!startTime) startTime = timestamp;
+                    const progress = Math.min((timestamp - startTime) / duration, 1);
+                    element.textContent = Math.floor(progress * (end - start) + start).toLocaleString();
+                    if (progress < 1) window.requestAnimationFrame(step);
+                    else element.textContent = end.toLocaleString();
+                };
+                window.requestAnimationFrame(step);
+            };
+
+            const initializeChart = () => {
+                const ctx = document.getElementById('comparison-chart').getContext('2d');
+                comparisonChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        datasets: [
+                            { label: 'Channel 1', data: [], borderColor: '#FF0000', backgroundColor: 'rgba(255, 0, 0, 0.1)', fill: true, tension: 0.2, pointRadius: 0 },
+                            { label: 'Channel 2', data: [], borderColor: '#4285F4', backgroundColor: 'rgba(66, 133, 244, 0.1)', fill: true, tension: 0.2, pointRadius: 0 }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        scales: {
+                            x: { type: 'time', time: { unit: 'second', displayFormats: { second: 'HH:mm:ss' } }, ticks: { maxTicksLimit: 7, color: '#888' }, grid: { color: 'rgba(136, 136, 136, 0.2)' } },
+                            y: { ticks: { callback: (v) => (v >= 1e6 ? `${(v / 1e6).toFixed(2)}M` : v >= 1e3 ? `${(v / 1e3).toFixed(1)}K` : v), color: '#888' }, grid: { color: 'rgba(136, 136, 136, 0.2)' } }
+                        },
+                        plugins: { legend: { labels: { color: '#888' } }, tooltip: { mode: 'index', intersect: false } },
+                        animation: { duration: 0 }
+                    }
+                });
+            };
+
+            const updateChart = (channelIndex, newCount) => {
+                if (!comparisonChart) return;
+                const now = Date.now();
+                const chartData = comparisonChart.data.datasets[channelIndex].data;
+                chartData.push({ x: now, y: newCount });
+                while (chartData.length > 0 && chartData[0].x < now - 60000) {
+                    chartData.shift();
+                }
+                comparisonChart.update('none');
+            };
+
+            const processChannelData = (data, elements, state, chartIndex) => {
+                if (data && data.items && data.items.length > 0) {
+                    const channel = data.items[0];
+                    const stats = channel.statistics;
+                    elements.logo.src = channel.snippet.thumbnails.default.url;
+                    elements.name.textContent = channel.snippet.title;
+                    comparisonChart.data.datasets[chartIndex].label = channel.snippet.title;
+
+                    const newSubs = parseInt(stats.subscriberCount, 10);
+                    const newViews = parseInt(stats.viewCount, 10);
+                    const newVideos = parseInt(stats.videoCount, 10);
+
+                    if (newSubs !== state.subs) animateCount(elements.subs, state.subs, newSubs, 1500);
+                    updateChart(chartIndex, newSubs);
+                    state.subs = newSubs;
+
+                    if (newViews !== state.views) animateCount(elements.views, state.views, newViews, 1500);
+                    state.views = newViews;
+
+                    if (newVideos !== state.videos) animateCount(elements.videos, state.videos, newVideos, 1500);
+                    state.videos = newVideos;
+                } else {
+                    elements.name.textContent = 'Channel not found';
+                }
+            };
+
+            const fetchAllData = async () => {
+                if (!channelId1 || !channelId2) {
+                    elements1.name.textContent = 'Channel 1 Not Provided';
+                    elements2.name.textContent = 'Channel 2 Not Provided';
+                    return;
+                }
+
+                const url1 = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelId1}&key=${API_KEY}`;
+                const url2 = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelId2}&key=${API_KEY}`;
+
+                try {
+                    const [res1, res2] = await Promise.all([fetch(url1), fetch(url2)]);
+                    if (!res1.ok || !res2.ok) throw new Error('API request failed');
+                    const [data1, data2] = await Promise.all([res1.json(), res2.json()]);
+
+                    processChannelData(data1, elements1, state1, 0);
+                    processChannelData(data2, elements2, state2, 1);
+
+                } catch (error) {
+                    console.error('Error fetching comparison data:', error);
+                    elements1.name.textContent = 'Error';
+                    elements2.name.textContent = 'Error';
+                }
+            };
+
+            initializeChart();
+            fetchAllData();
+            setInterval(fetchAllData, 2000);
+        });
+    </script>
+    <script src="theme.js" defer></script>
+</body>
+</html>
